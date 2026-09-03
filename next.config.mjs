@@ -7,4 +7,10 @@ const nextConfig = {
   },
 };
 
-export default createMDX({})(nextConfig);
+export default createMDX({
+  options: {
+    // Use package names so Turbopack can serialize loader options.
+    remarkPlugins: ['remark-frontmatter', 'remark-mdx-frontmatter'],
+    rehypePlugins: ['rehype-slug'],
+  },
+})(nextConfig);
