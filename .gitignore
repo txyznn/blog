@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Next.js build output and cache
+.next/
+out/
+
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# Production bundles
+dist/
+build/
+
+# Test and coverage output
+coverage/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Logs and debug output
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

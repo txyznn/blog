@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+
+:root { --ink: #172033; --muted: #657086; --blue: #397be9; --blue-pale: #edf5ff; --line: #e3e9f2; --paper: #ffffff; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: #f8fbff; color: var(--ink); font-family: "PingFang SC", "Microsoft YaHei", Arial, sans-serif; }
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; }
+:focus-visible { outline: 3px solid #75a8f7; outline-offset: 3px; }
+.serif { font-family: Georgia, "Songti SC", "SimSun", serif; }
+.hero-bg { background: linear-gradient(90deg, rgba(239,247,255,.99) 0%, rgba(239,247,255,.82) 44%, rgba(239,247,255,.12) 73%), url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1800&q=85') center/cover; }
+@media (max-width: 767px) { .hero-bg { background: linear-gradient(180deg, rgba(239,247,255,.94), rgba(239,247,255,.74)), url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=85') center/cover; } }

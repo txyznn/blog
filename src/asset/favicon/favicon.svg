@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Chaowen icon</title>
+  <desc id="desc">A white C monogram and blue dot on a navy rounded square.</desc>
+  <rect width="512" height="512" rx="116" fill="#172b43"/>
+  <rect x="18" y="18" width="476" height="476" rx="102" fill="none" stroke="#397be9" stroke-opacity=".3" stroke-width="4"/>
+  <path d="M 355 144 A 155 155 0 1 0 355 368" fill="none" stroke="#edf5ff" stroke-width="58" stroke-linecap="round"/>
+  <circle cx="371" cy="370" r="34" fill="#397be9"/>
+</svg>
