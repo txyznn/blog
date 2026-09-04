@@ -11,11 +11,16 @@ import {
   Moon,
   Search,
   Send,
+  Sun,
   X,
 } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import logo from '../asset/logo/logo-light.png';
 import avatar from '../asset/avatar.png';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 
 export type Post = {
   slug: string;
@@ -50,6 +55,21 @@ export default function Home({ posts }: { posts: Post[] }) {
   const [status, setStatus] = useState<
     'idle' | 'loading' | 'success' | 'error'
   >('idle');
+  const [isDark, setIsDark] = useState(false);
+  useEffect(() => {
+    const savedTheme = window.localStorage.getItem('theme');
+    const shouldUseDark = savedTheme
+      ? savedTheme === 'dark'
+      : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setIsDark(shouldUseDark);
+    document.documentElement.classList.toggle('dark', shouldUseDark);
+  }, []);
+  const toggleTheme = () => {
+    const nextIsDark = !isDark;
+    setIsDark(nextIsDark);
+    document.documentElement.classList.toggle('dark', nextIsDark);
+    window.localStorage.setItem('theme', nextIsDark ? 'dark' : 'light');
+  };
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!email.includes('@')) {
@@ -62,7 +82,7 @@ export default function Home({ posts }: { posts: Post[] }) {
   const navItems = ['首页', '文章', '分类', '标签', '关于我', '归档'];
 
   return (
-    <main className="mx-auto my-0 max-w-[1440px] bg-white shadow-[0_18px_60px_rgba(31,52,82,.07)] md:my-7 md:rounded-[10px]">
+    <main data-theme={isDark ? 'dark' : 'light'} className={`mx-auto my-0 max-w-[1440px] bg-white shadow-[0_18px_60px_rgba(31,52,82,.07)] md:my-7 md:rounded-[10px] ${isDark ? 'theme-dark' : ''}`}>
       <a href="#content" className="sr-only focus:not-sr-only">
         跳到正文
       </a>
@@ -89,34 +109,38 @@ export default function Home({ posts }: { posts: Post[] }) {
           ))}
         </nav>
         <div className="hidden items-center gap-4 md:flex">
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             aria-label="搜索文章"
-            className="rounded p-2 text-[#455168] hover:bg-[#f2f6fb]"
+            className="text-[#455168]"
           >
-            <Search size={19} />
-          </button>
-          <button
-            aria-label="切换深色模式"
-            className="rounded p-2 text-[#455168] hover:bg-[#f2f6fb]"
+            <Search data-icon="inline-start" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={isDark ? '切换浅色模式' : '切换深色模式'}
+            aria-pressed={isDark}
+            onClick={toggleTheme}
+            className="text-[#455168]"
           >
-            <Moon size={18} />
-          </button>
-          <a
-            href="#newsletter"
-            className="inline-flex h-10 items-center gap-2 rounded-md bg-[#496b99] px-4 text-sm font-medium text-white shadow-[0_5px_12px_rgba(73,107,153,.24)] transition hover:bg-[#3e5d87]"
-          >
-            <Mail size={16} />
-            订阅
-          </a>
+            {isDark ? <Sun data-icon="inline-start" /> : <Moon data-icon="inline-start" />}
+          </Button>
+          <Button asChild className="bg-[#496b99] shadow-[0_5px_12px_rgba(73,107,153,.24)] hover:bg-[#3e5d87]">
+            <a href="#newsletter"><Mail data-icon="inline-start" />订阅</a>
+          </Button>
         </div>
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           aria-label="打开导航"
           aria-expanded={isMenuOpen}
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="rounded p-2 md:hidden"
+          className="md:hidden"
         >
           {isMenuOpen ? <X /> : <Menu />}
-        </button>
+        </Button>
       </header>
       {isMenuOpen && (
         <nav
@@ -151,18 +175,8 @@ export default function Home({ posts }: { posts: Post[] }) {
             从仿真出发，走向真实世界。
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
-            <a
-              href="#content"
-              className="inline-flex h-11 items-center gap-2 rounded-md bg-[#496b99] px-5 text-sm font-medium text-white shadow-[0_8px_18px_rgba(73,107,153,.24)] transition hover:bg-[#3e5d87]"
-            >
-              阅读最新文章 <ArrowRight size={16} />
-            </a>
-            <a
-              href="#关于我"
-              className="inline-flex h-11 items-center gap-2 rounded-md border border-[#b8c8df] px-5 text-sm font-medium transition hover:border-[var(--blue)] hover:bg-white/60"
-            >
-              认识我 <ArrowRight size={16} />
-            </a>
+            <Button asChild size="lg" className="bg-[#496b99] shadow-[0_8px_18px_rgba(73,107,153,.24)] hover:bg-[#3e5d87]"><a href="#content">阅读最新文章 <ArrowRight data-icon="inline-end" /></a></Button>
+            <Button asChild size="lg" variant="outline" className="border-[#b8c8df] bg-transparent hover:border-[var(--blue)] hover:bg-white/60"><a href="#关于我">认识我 <ArrowRight data-icon="inline-end" /></a></Button>
           </div>
           <div className="mt-10 flex items-center gap-5 text-[#3f4d61]">
             <a aria-label="GitHub" href="#">
@@ -212,9 +226,7 @@ export default function Home({ posts }: { posts: Post[] }) {
                   />
                 </div>
                 <div className="py-1">
-                  <span className="rounded-full bg-[#edf5ff] px-2.5 py-1 text-xs font-medium text-[var(--blue)]">
-                    {post.category}
-                  </span>
+                  <Badge variant="secondary" className="bg-[#edf5ff] text-[var(--blue)]">{post.category}</Badge>
                   <h3 className="mt-3 text-xl font-semibold leading-7 tracking-normal">
                     <a
                       className="hover:text-[var(--blue)]"
@@ -236,13 +248,11 @@ export default function Home({ posts }: { posts: Post[] }) {
             ))}
           </div>
         </section>
-        <aside className="space-y-5">
-          <section
-            id="关于我"
-            className="rounded-md border border-[var(--line)] p-6"
-          >
-            <h2 className="serif text-xl font-semibold">关于我</h2>
-            <div className="mt-5 flex items-center gap-4">
+        <aside className="flex flex-col gap-5">
+          <Card id="关于我" className="rounded-md border-[var(--line)] shadow-none">
+            <CardHeader className="p-6 pb-0"><CardTitle className="serif text-xl">关于我</CardTitle></CardHeader>
+            <CardContent className="p-6">
+            <div className="flex items-center gap-4">
               <Image
                 className="rounded-full"
                 src={avatar}
@@ -256,36 +266,23 @@ export default function Home({ posts }: { posts: Post[] }) {
                 这个人很懒，什么都没留下
               </p>
             </div>
-            <a
-              className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-[var(--blue)] hover:underline"
-              href="#"
-            >
-              更多关于我 <ArrowRight size={15} />
-            </a>
-          </section>
-          <section
-            id="标签"
-            className="rounded-md border border-[var(--line)] p-6"
-          >
-            <h2 className="serif text-xl font-semibold">热门标签</h2>
-            <div className="mt-4 flex flex-wrap gap-2">
+            <a className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-[var(--blue)] hover:underline" href="#">更多关于我 <ArrowRight /></a>
+            </CardContent>
+          </Card>
+          <Card id="标签" className="rounded-md border-[var(--line)] shadow-none">
+            <CardHeader className="p-6 pb-0"><CardTitle className="serif text-xl">热门标签</CardTitle></CardHeader>
+            <CardContent className="p-6">
+            <div className="flex flex-wrap gap-2">
               {tags.map((tag) => (
-                <a
-                  key={tag}
-                  href="#"
-                  className="rounded-full bg-[#f4f7fb] px-3 py-1.5 text-xs text-[#526078] transition hover:bg-[#e2efff] hover:text-[var(--blue)]"
-                >
-                  {tag}
-                </a>
+                <Badge key={tag} asChild variant="outline" className="border-transparent bg-[#f4f7fb] px-3 py-1.5 font-normal text-[#526078] hover:bg-[#e2efff] hover:text-[var(--blue)]"><a href="#">{tag}</a></Badge>
               ))}
             </div>
-          </section>
-          <section
-            id="分类"
-            className="rounded-md border border-[var(--line)] p-6"
-          >
-            <h2 className="serif text-xl font-semibold">文章分类</h2>
-            <ul className="mt-4 space-y-3">
+            </CardContent>
+          </Card>
+          <Card id="分类" className="rounded-md border-[var(--line)] shadow-none">
+            <CardHeader className="p-6 pb-0"><CardTitle className="serif text-xl">文章分类</CardTitle></CardHeader>
+            <CardContent className="p-6">
+            <ul className="flex flex-col gap-3">
               {categories.map(([name, count], index) => (
                 <li
                   key={name}
@@ -304,13 +301,11 @@ export default function Home({ posts }: { posts: Post[] }) {
                 </li>
               ))}
             </ul>
-          </section>
-          <section
-            id="归档"
-            className="rounded-md border border-[var(--line)] p-6"
-          >
-            <h2 className="serif text-xl font-semibold">归档</h2>
-            <div className="mt-4 space-y-3 text-sm text-[#56637a]">
+            </CardContent>
+          </Card>
+          <Card id="归档" className="rounded-md border-[var(--line)] shadow-none">
+            <CardHeader className="p-6 pb-0"><CardTitle className="serif text-xl">归档</CardTitle></CardHeader>
+            <CardContent className="flex flex-col gap-3 p-6 text-sm text-[#56637a]">
               <a
                 className="flex justify-between hover:text-[var(--blue)]"
                 href="#"
@@ -332,8 +327,8 @@ export default function Home({ posts }: { posts: Post[] }) {
                 <span>2024 年 4 月</span>
                 <span>5</span>
               </a>
-            </div>
-          </section>
+            </CardContent>
+          </Card>
         </aside>
       </div>
       <section
@@ -356,7 +351,7 @@ export default function Home({ posts }: { posts: Post[] }) {
             邮箱地址
           </label>
           <div className="flex gap-2">
-            <input
+            <Input
               id="email"
               value={email}
               onChange={(event) => {
@@ -365,15 +360,17 @@ export default function Home({ posts }: { posts: Post[] }) {
               }}
               type="email"
               autoComplete="email"
-              className="h-11 min-w-0 flex-1 rounded-md border border-[#d7e1f0] bg-white px-3 text-sm"
+              className="h-11 border-[#d7e1f0] bg-white"
               placeholder="你的邮箱地址"
             />
-            <button
+            <Button
+              type="submit"
+              size="lg"
               disabled={status === 'loading'}
-              className="h-11 shrink-0 rounded-md bg-[var(--blue)] px-5 text-sm font-medium text-white shadow-[0_6px_14px_rgba(57,123,233,.2)] transition hover:bg-[#2869d2] disabled:opacity-60"
+              className="bg-[var(--blue)] shadow-[0_6px_14px_rgba(57,123,233,.2)] hover:bg-[#2869d2]"
             >
               {status === 'loading' ? '订阅中' : '订阅'}
-            </button>
+            </Button>
           </div>
           <p
             aria-live="polite"

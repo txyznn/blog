@@ -5,6 +5,8 @@ import { ArrowLeft, CalendarDays, Clock3, Tag } from 'lucide-react';
 import { getPostBySlug, getPostHeadings, getPostSlugs } from '../../../lib/posts';
 import logo from '../../../asset/logo/logo-light.png';
 import TableOfContents from '../../../components/TableOfContents';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -34,9 +36,7 @@ export default async function PostPage({ params }: PageProps) {
           <a href="/" aria-label="返回首页" className="inline-flex items-center">
             <Image src={logo} alt="Chaowen" width={118} height={26} priority className="h-auto w-[106px]" />
           </a>
-          <a href="/" className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-[var(--muted)] transition hover:bg-[var(--blue-pale)] hover:text-[var(--blue)]">
-            <ArrowLeft size={16} /> 返回首页
-          </a>
+          <Button asChild variant="ghost"><a href="/"><ArrowLeft data-icon="inline-start" />返回首页</a></Button>
         </div>
       </header>
 
@@ -46,7 +46,7 @@ export default async function PostPage({ params }: PageProps) {
           <div className="min-w-0 lg:col-start-1 lg:row-start-1">
         <header className="mx-auto max-w-3xl text-center">
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-[var(--muted)]">
-            <span className="inline-flex items-center gap-1.5 font-medium text-[var(--blue)]"><Tag size={14} />{post.category}</span>
+            <Badge variant="secondary" className="gap-1.5 bg-[var(--blue-pale)] text-[var(--blue)]"><Tag data-icon="inline-start" />{post.category}</Badge>
             <span className="inline-flex items-center gap-1.5"><CalendarDays size={14} />{post.date}</span>
             <span className="inline-flex items-center gap-1.5"><Clock3 size={14} />{post.readTime}</span>
           </div>
@@ -66,7 +66,7 @@ export default async function PostPage({ params }: PageProps) {
 
         <footer className="mx-auto mt-16 flex max-w-3xl items-center justify-between border-t border-[var(--line)] pt-6 text-sm text-[var(--muted)]">
           <span>感谢阅读</span>
-          <a href="/" className="inline-flex items-center gap-2 font-medium text-[var(--blue)] hover:underline"><ArrowLeft size={15} /> 返回文章列表</a>
+          <Button asChild variant="link" className="h-auto p-0"><a href="/"><ArrowLeft data-icon="inline-start" />返回文章列表</a></Button>
         </footer>
           </div>
         </div>
