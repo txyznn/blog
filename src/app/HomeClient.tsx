@@ -15,12 +15,14 @@ import {
   X,
 } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
-import logo from '../asset/logo/logo-light.png';
+import logoLight from '../asset/logo/logo-light.png';
+import logoDark from '../asset/logo/logo-dark.png';
 import avatar from '../asset/avatar.png';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 export type Post = {
   slug: string;
@@ -82,26 +84,20 @@ export default function Home({ posts }: { posts: Post[] }) {
   const navItems = ['首页', '文章', '分类', '标签', '关于我', '归档'];
 
   return (
-    <main data-theme={isDark ? 'dark' : 'light'} className={`mx-auto my-0 max-w-[1440px] bg-white shadow-[0_18px_60px_rgba(31,52,82,.07)] md:my-7 md:rounded-[10px] ${isDark ? 'theme-dark' : ''}`}>
+    <main data-theme={isDark ? 'dark' : 'light'} className="mx-auto my-0 max-w-[1440px] bg-background shadow-sm md:my-7 md:rounded-lg">
       <a href="#content" className="sr-only focus:not-sr-only">
         跳到正文
       </a>
-      <header className="flex h-20 items-center justify-between border-b border-[var(--line)] px-5 md:px-10">
+      <header className="flex h-20 items-center justify-between border-b border-border bg-background/95 px-5 backdrop-blur md:px-10">
         <a className="inline-flex items-center" href="#">
-          <Image
-            src={logo}
-            alt="Chaowen"
-            width={118}
-            height={26}
-            priority
-            className="h-auto w-[118px]"
-          />
+          <Image src={logoLight} alt="Chaowen" width={118} height={26} priority className="h-auto w-[118px] dark:hidden" />
+          <Image src={logoDark} alt="" width={118} height={26} priority aria-hidden="true" className="hidden h-auto w-[118px] dark:block" />
         </a>
         <nav className="hidden items-center gap-8 lg:flex" aria-label="主导航">
           {navItems.map((item) => (
             <a
               key={item}
-              className="text-sm font-medium text-[#3b4558] transition hover:text-[var(--blue)]"
+              className="text-sm font-medium text-foreground/75 transition-colors hover:text-primary"
               href={item === '首页' ? '#' : `#${item}`}
             >
               {item}
@@ -113,7 +109,7 @@ export default function Home({ posts }: { posts: Post[] }) {
             variant="ghost"
             size="icon"
             aria-label="搜索文章"
-            className="text-[#455168]"
+            className="text-muted-foreground"
           >
             <Search data-icon="inline-start" />
           </Button>
@@ -123,11 +119,11 @@ export default function Home({ posts }: { posts: Post[] }) {
             aria-label={isDark ? '切换浅色模式' : '切换深色模式'}
             aria-pressed={isDark}
             onClick={toggleTheme}
-            className="text-[#455168]"
+            className="text-muted-foreground"
           >
             {isDark ? <Sun data-icon="inline-start" /> : <Moon data-icon="inline-start" />}
           </Button>
-          <Button asChild className="bg-[#496b99] shadow-[0_5px_12px_rgba(73,107,153,.24)] hover:bg-[#3e5d87]">
+          <Button asChild>
             <a href="#newsletter"><Mail data-icon="inline-start" />订阅</a>
           </Button>
         </div>
@@ -144,14 +140,14 @@ export default function Home({ posts }: { posts: Post[] }) {
       </header>
       {isMenuOpen && (
         <nav
-          className="border-b border-[var(--line)] px-5 py-4 md:hidden"
+          className="border-b border-border px-5 py-4 md:hidden"
           aria-label="移动导航"
         >
           {navItems.map((item) => (
             <a
               key={item}
               onClick={() => setIsMenuOpen(false)}
-              className="block rounded px-3 py-3 text-sm hover:bg-[#f1f6ff]"
+              className="block rounded-md px-3 py-3 text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
               href={item === '首页' ? '#' : `#${item}`}
             >
               {item}
@@ -162,23 +158,23 @@ export default function Home({ posts }: { posts: Post[] }) {
 
       <section className="hero-bg min-h-[490px] px-7 py-20 md:min-h-[525px] md:px-16 md:py-28">
         <div className="max-w-[510px]">
-          <p className="mb-5 text-sm font-semibold text-[var(--blue)]">
+          <p className="mb-5 text-sm font-semibold text-primary">
             HELLO, I&apos;M CHAOWEN
           </p>
           <h1 className="serif text-[48px] font-semibold leading-[1.12] md:text-[68px]">
             <span className="block">数据驱动</span>
             <span className="block">世界引擎</span>
           </h1>
-          <p className="mt-7 max-w-md text-base leading-8 text-[#42516a]">
+          <p className="mt-7 max-w-md text-base leading-8 text-foreground/70">
             From Simulation to Reality.
             <br />
             从仿真出发，走向真实世界。
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
-            <Button asChild size="lg" className="bg-[#496b99] shadow-[0_8px_18px_rgba(73,107,153,.24)] hover:bg-[#3e5d87]"><a href="#content">阅读最新文章 <ArrowRight data-icon="inline-end" /></a></Button>
-            <Button asChild size="lg" variant="outline" className="border-[#b8c8df] bg-transparent hover:border-[var(--blue)] hover:bg-white/60"><a href="#关于我">认识我 <ArrowRight data-icon="inline-end" /></a></Button>
+            <Button asChild size="lg"><a href="#content">阅读最新文章 <ArrowRight data-icon="inline-end" /></a></Button>
+            <Button asChild size="lg" variant="outline"><a href="#关于我">认识我 <ArrowRight data-icon="inline-end" /></a></Button>
           </div>
-          <div className="mt-10 flex items-center gap-5 text-[#3f4d61]">
+          <div className="mt-10 flex items-center gap-5 text-foreground/70">
             <a aria-label="GitHub" href="#">
               <Github size={20} />
             </a>
@@ -204,7 +200,7 @@ export default function Home({ posts }: { posts: Post[] }) {
           <div className="mb-7 flex items-center justify-between">
             <h2 className="serif text-2xl font-semibold">最新文章</h2>
             <a
-              className="inline-flex items-center gap-1 text-sm text-[#536178] hover:text-[var(--blue)]"
+              className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary"
               href="#文章"
             >
               查看全部 <ChevronRight size={16} />
@@ -214,7 +210,7 @@ export default function Home({ posts }: { posts: Post[] }) {
             {posts.map((post) => (
               <article
                 key={post.slug}
-                className="grid gap-5 border-t border-[var(--line)] py-5 first:border-t-2 first:border-[var(--blue)] sm:grid-cols-[190px_1fr]"
+                className="grid gap-5 border-t border-border py-5 first:border-t-2 first:border-primary sm:grid-cols-[190px_1fr]"
               >
                 <div className="relative aspect-[4/3] overflow-hidden rounded-md">
                   <Image
@@ -226,19 +222,19 @@ export default function Home({ posts }: { posts: Post[] }) {
                   />
                 </div>
                 <div className="py-1">
-                  <Badge variant="secondary" className="bg-[#edf5ff] text-[var(--blue)]">{post.category}</Badge>
+                  <Badge variant="secondary">{post.category}</Badge>
                   <h3 className="mt-3 text-xl font-semibold leading-7 tracking-normal">
                     <a
-                      className="hover:text-[var(--blue)]"
+                      className="transition-colors hover:text-primary"
                       href={`/posts/${post.slug}`}
                     >
                       {post.title}
                     </a>
                   </h3>
-                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-[var(--muted)]">
+                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">
                     {post.excerpt}
                   </p>
-                  <p className="mt-4 text-xs text-[#7c8799]">
+                  <p className="mt-4 text-xs text-muted-foreground">
                     {post.date}
                     <span className="mx-2">·</span>
                     {post.readTime}
@@ -249,7 +245,7 @@ export default function Home({ posts }: { posts: Post[] }) {
           </div>
         </section>
         <aside className="flex flex-col gap-5">
-          <Card id="关于我" className="rounded-md border-[var(--line)] shadow-none">
+          <Card id="关于我">
             <CardHeader className="p-6 pb-0"><CardTitle className="serif text-xl">关于我</CardTitle></CardHeader>
             <CardContent className="p-6">
             <div className="flex items-center gap-4">
@@ -260,26 +256,26 @@ export default function Home({ posts }: { posts: Post[] }) {
                 width={62}
                 height={62}
               />
-              <p className="text-sm leading-6 text-[var(--muted)]">
+              <p className="text-sm leading-6 text-muted-foreground">
                 程序员 / 博客作者
                 <br />
                 这个人很懒，什么都没留下
               </p>
             </div>
-            <a className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-[var(--blue)] hover:underline" href="#">更多关于我 <ArrowRight /></a>
+            <a className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline" href="#">更多关于我 <ArrowRight data-icon="inline-end" /></a>
             </CardContent>
           </Card>
-          <Card id="标签" className="rounded-md border-[var(--line)] shadow-none">
+          <Card id="标签">
             <CardHeader className="p-6 pb-0"><CardTitle className="serif text-xl">热门标签</CardTitle></CardHeader>
             <CardContent className="p-6">
             <div className="flex flex-wrap gap-2">
               {tags.map((tag) => (
-                <Badge key={tag} asChild variant="outline" className="border-transparent bg-[#f4f7fb] px-3 py-1.5 font-normal text-[#526078] hover:bg-[#e2efff] hover:text-[var(--blue)]"><a href="#">{tag}</a></Badge>
+                <Badge key={tag} asChild variant="outline" className="bg-muted px-3 py-1.5 font-normal text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"><a href="#">{tag}</a></Badge>
               ))}
             </div>
             </CardContent>
           </Card>
-          <Card id="分类" className="rounded-md border-[var(--line)] shadow-none">
+          <Card id="分类">
             <CardHeader className="p-6 pb-0"><CardTitle className="serif text-xl">文章分类</CardTitle></CardHeader>
             <CardContent className="p-6">
             <ul className="flex flex-col gap-3">
@@ -289,39 +285,39 @@ export default function Home({ posts }: { posts: Post[] }) {
                   className="flex items-center justify-between text-sm"
                 >
                   <a
-                    className="flex items-center gap-2 hover:text-[var(--blue)]"
+                    className="flex items-center gap-2 transition-colors hover:text-primary"
                     href="#"
                   >
                     <span
-                      className={`h-2 w-2 rounded-full ${['bg-[#5088ed]', 'bg-[#64b9a7]', 'bg-[#f39a71]', 'bg-[#9d8dde]'][index]}`}
+                      className={`size-2 rounded-full ${['bg-chart-1', 'bg-chart-2', 'bg-chart-4', 'bg-chart-5'][index]}`}
                     />
                     {name}
                   </a>
-                  <span className="text-[#8b96a6]">{count}</span>
+                  <span className="text-muted-foreground">{count}</span>
                 </li>
               ))}
             </ul>
             </CardContent>
           </Card>
-          <Card id="归档" className="rounded-md border-[var(--line)] shadow-none">
+          <Card id="归档">
             <CardHeader className="p-6 pb-0"><CardTitle className="serif text-xl">归档</CardTitle></CardHeader>
-            <CardContent className="flex flex-col gap-3 p-6 text-sm text-[#56637a]">
+            <CardContent className="flex flex-col gap-3 p-6 text-sm text-muted-foreground">
               <a
-                className="flex justify-between hover:text-[var(--blue)]"
+                className="flex justify-between transition-colors hover:text-primary"
                 href="#"
               >
                 <span>2024 年 6 月</span>
                 <span>4</span>
               </a>
               <a
-                className="flex justify-between hover:text-[var(--blue)]"
+                className="flex justify-between transition-colors hover:text-primary"
                 href="#"
               >
                 <span>2024 年 5 月</span>
                 <span>7</span>
               </a>
               <a
-                className="flex justify-between hover:text-[var(--blue)]"
+                className="flex justify-between transition-colors hover:text-primary"
                 href="#"
               >
                 <span>2024 年 4 月</span>
@@ -333,15 +329,15 @@ export default function Home({ posts }: { posts: Post[] }) {
       </div>
       <section
         id="newsletter"
-        className="mx-5 mb-10 grid gap-6 rounded-md bg-[#edf5ff] px-6 py-8 md:mx-14 md:grid-cols-[1fr_auto] md:items-center md:px-9"
+        className="mx-5 mb-10 grid gap-6 rounded-lg border border-border bg-accent px-6 py-8 md:mx-14 md:grid-cols-[1fr_auto] md:items-center md:px-9"
       >
         <div className="flex gap-4">
-          <div className="hidden h-11 w-11 shrink-0 place-items-center rounded-full bg-white text-[var(--blue)] sm:grid">
+          <div className="hidden size-11 shrink-0 place-items-center rounded-full bg-background text-primary sm:grid">
             <Send size={20} />
           </div>
           <div>
             <h2 className="serif text-2xl font-semibold">订阅我的来信</h2>
-            <p className="mt-1 text-sm leading-6 text-[#596982]">
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
               每月一封，分享最近的阅读、思考与生活碎片。
             </p>
           </div>
@@ -360,21 +356,24 @@ export default function Home({ posts }: { posts: Post[] }) {
               }}
               type="email"
               autoComplete="email"
-              className="h-11 border-[#d7e1f0] bg-white"
+              className="h-11 bg-background"
               placeholder="你的邮箱地址"
             />
             <Button
               type="submit"
               size="lg"
               disabled={status === 'loading'}
-              className="bg-[var(--blue)] shadow-[0_6px_14px_rgba(57,123,233,.2)] hover:bg-[#2869d2]"
+              className="shadow-sm"
             >
               {status === 'loading' ? '订阅中' : '订阅'}
             </Button>
           </div>
           <p
             aria-live="polite"
-            className={`mt-2 text-xs ${status === 'error' ? 'text-red-600' : 'text-[#33745c]'}`}
+            className={cn(
+              'mt-2 text-xs',
+              status === 'error' ? 'text-destructive' : 'text-success',
+            )}
           >
             {status === 'success'
               ? '订阅成功，下一封来信见。'
@@ -384,16 +383,11 @@ export default function Home({ posts }: { posts: Post[] }) {
           </p>
         </form>
       </section>
-      <footer className="flex flex-col gap-5 border-t border-[var(--line)] px-5 py-8 text-sm text-[#718096] md:flex-row md:items-center md:justify-between md:px-14">
+      <footer className="flex flex-col gap-5 border-t border-border px-5 py-8 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between md:px-14">
         <div>
           <a className="inline-flex items-center" href="#">
-            <Image
-              src={logo}
-              alt="Chaowen"
-              width={105}
-              height={23}
-              className="h-auto w-[105px]"
-            />
+            <Image src={logoLight} alt="Chaowen" width={105} height={23} className="h-auto w-[105px] dark:hidden" />
+            <Image src={logoDark} alt="" width={105} height={23} aria-hidden="true" className="hidden h-auto w-[105px] dark:block" />
           </a>
           <p className="mt-2">© 2026 Chaowen. Made with quiet care.</p>
         </div>
@@ -403,7 +397,7 @@ export default function Home({ posts }: { posts: Post[] }) {
           <a href="#">隐私</a>
           <a href="#">RSS</a>
         </div>
-        <div className="flex items-center gap-4 text-[#4c5b6f]">
+        <div className="flex items-center gap-4 text-foreground/65">
           <a aria-label="GitHub" href="#">
             <Github size={19} />
           </a>

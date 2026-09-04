@@ -19,13 +19,78 @@ function normalizeImagePath(value: unknown): string {
   return `/${imagePath}`;
 }
 
+const dateTimePattern =
+    /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/;
+
+function padDatePart(value: number): string {
+  return String(value).padStart(2, '0');
+}
+
+function formatDateTime(
+    year: number,
+    month: number,
+    day: number,
+    hours = 0,
+    minutes = 0,
+    seconds = 0,
+): string {
+  return `${year}-${padDatePart(month)}-${padDatePart(day)} ` +
+      `${padDatePart(hours)}:${padDatePart(minutes)}:${padDatePart(seconds)}`;
+}
+
 function normalizeDate(value: unknown): string {
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return value.toISOString().slice(0, 10);
+    // gray-matter parses an unquoted `YYYY-MM-DD HH:mm:ss` value as a Date
+    // whose UTC components preserve the timestamp written in frontmatter.
+    return formatDateTime(
+        value.getUTCFullYear(),
+        value.getUTCMonth() + 1,
+        value.getUTCDate(),
+        value.getUTCHours(),
+        value.getUTCMinutes(),
+        value.getUTCSeconds(),
+    );
   }
+
   const date = String(value ?? '').trim();
+  const match = dateTimePattern.exec(date);
+  if (match) {
+    return formatDateTime(
+        Number(match[1]),
+        Number(match[2]),
+        Number(match[3]),
+        Number(match[4] ?? 0),
+        Number(match[5] ?? 0),
+        Number(match[6] ?? 0),
+    );
+  }
+
   const parsed = new Date(date);
-  return !Number.isNaN(parsed.getTime()) ? parsed.toISOString().slice(0, 10) : date;
+  return !Number.isNaN(parsed.getTime()) ?
+      formatDateTime(
+          parsed.getUTCFullYear(),
+          parsed.getUTCMonth() + 1,
+          parsed.getUTCDate(),
+          parsed.getUTCHours(),
+          parsed.getUTCMinutes(),
+          parsed.getUTCSeconds(),
+      ) : date;
+}
+
+function dateTimestamp(value: string): number {
+  const match = dateTimePattern.exec(value);
+  if (match) {
+    return Date.UTC(
+        Number(match[1]),
+        Number(match[2]) - 1,
+        Number(match[3]),
+        Number(match[4] ?? 0),
+        Number(match[5] ?? 0),
+        Number(match[6] ?? 0),
+    );
+  }
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? Number.NEGATIVE_INFINITY : parsed;
 }
 
 export type Heading = {
@@ -46,14 +111,14 @@ export function getAllPosts(): Post[] {
           slug,
           title: String(data.title ?? slug),
           excerpt: String(data.description ?? ''),
-        date: normalizeDate(data.date),
+          date: normalizeDate(data.date),
           category: String(data.category ?? '未分类'),
           image: normalizeImagePath(data.cover),
           readTime: String(data.readTime ?? '阅读 5 分钟'),
         };
       })
       .filter((post) => post.date && post.category)
-      .sort((a, b) => b.date.localeCompare(a.date));
+      .sort((a, b) => dateTimestamp(b.date) - dateTimestamp(a.date));
 }
 
 export function getPostSlugs(): string[] {
