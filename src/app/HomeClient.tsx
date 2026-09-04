@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import logo from '../asset/logo/logo-light.png';
+import avatar from '../asset/avatar.png';
 
 export type Post = {
   slug: string;
@@ -102,7 +103,7 @@ export default function Home({ posts }: { posts: Post[] }) {
           </button>
           <a
             href="#newsletter"
-            className="inline-flex h-10 items-center gap-2 rounded-md bg-[var(--blue)] px-4 text-sm font-medium text-white shadow-[0_5px_12px_rgba(57,123,233,.18)] transition hover:bg-[#2869d2]"
+            className="inline-flex h-10 items-center gap-2 rounded-md bg-[#496b99] px-4 text-sm font-medium text-white shadow-[0_5px_12px_rgba(73,107,153,.24)] transition hover:bg-[#3e5d87]"
           >
             <Mail size={16} />
             订阅
@@ -152,7 +153,7 @@ export default function Home({ posts }: { posts: Post[] }) {
           <div className="mt-9 flex flex-wrap gap-3">
             <a
               href="#content"
-              className="inline-flex h-11 items-center gap-2 rounded-md bg-[var(--blue)] px-5 text-sm font-medium text-white shadow-[0_8px_18px_rgba(57,123,233,.22)] transition hover:bg-[#2869d2]"
+              className="inline-flex h-11 items-center gap-2 rounded-md bg-[#496b99] px-5 text-sm font-medium text-white shadow-[0_8px_18px_rgba(73,107,153,.24)] transition hover:bg-[#3e5d87]"
             >
               阅读最新文章 <ArrowRight size={16} />
             </a>
@@ -244,15 +245,15 @@ export default function Home({ posts }: { posts: Post[] }) {
             <div className="mt-5 flex items-center gap-4">
               <Image
                 className="rounded-full"
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80"
+                src={avatar}
                 alt="Chaowen 的头像"
                 width={62}
                 height={62}
               />
               <p className="text-sm leading-6 text-[var(--muted)]">
-                设计师 / 写作者
+                程序员 / 博客作者
                 <br />
-                喜欢用好奇心，丈量生活。
+                这个人很懒，什么都没留下
               </p>
             </div>
             <a
@@ -397,7 +398,7 @@ export default function Home({ posts }: { posts: Post[] }) {
               className="h-auto w-[105px]"
             />
           </a>
-          <p className="mt-2">© 2024 Chaowen. Made with quiet care.</p>
+          <p className="mt-2">© 2026 Chaowen. Made with quiet care.</p>
         </div>
         <div className="flex gap-5">
           <a href="#">关于</a>

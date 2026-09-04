@@ -19,6 +19,15 @@ function normalizeImagePath(value: unknown): string {
   return `/${imagePath}`;
 }
 
+function normalizeDate(value: unknown): string {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.toISOString().slice(0, 10);
+  }
+  const date = String(value ?? '').trim();
+  const parsed = new Date(date);
+  return !Number.isNaN(parsed.getTime()) ? parsed.toISOString().slice(0, 10) : date;
+}
+
 export type Heading = {
   depth: 1|2; text: string; id: string;
 };
@@ -37,7 +46,7 @@ export function getAllPosts(): Post[] {
           slug,
           title: String(data.title ?? slug),
           excerpt: String(data.description ?? ''),
-          date: String(data.date ?? ''),
+        date: normalizeDate(data.date),
           category: String(data.category ?? '未分类'),
           image: normalizeImagePath(data.cover),
           readTime: String(data.readTime ?? '阅读 5 分钟'),
