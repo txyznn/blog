@@ -1,6 +1,13 @@
 import HomeClient from './HomeClient';
-import { getAllPosts } from '../lib/posts';
+import { getArchive, getAllCategories, getAllPosts, getAllTags } from '../lib/posts';
 
 export default function Home() {
-  return <HomeClient posts={getAllPosts()} />;
+  return (
+    <HomeClient
+      posts={getAllPosts()}
+      tags={getAllTags()}
+      categories={getAllCategories()}
+      archive={getArchive()}
+    />
+  );
 }

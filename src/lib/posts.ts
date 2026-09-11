@@ -3,7 +3,9 @@ import matter from 'gray-matter';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import type {Post} from '../app/HomeClient';
+import type {ArchiveGroup, Heading, Post, Term} from './types';
+
+export type {ArchiveGroup, Heading, Post, Term} from './types';
 
 const postsDirectory = path.join(process.cwd(), 'src/content/posts');
 const fallbackImage =
@@ -93,9 +95,26 @@ function dateTimestamp(value: string): number {
   return Number.isNaN(parsed) ? Number.NEGATIVE_INFINITY : parsed;
 }
 
-export type Heading = {
-  depth: 1|2; text: string; id: string;
-};
+/**
+ * frontmatter 里的 tags 可能是 YAML 数组，也可能是逗号/顿号分隔的字符串，
+ * 统一归一化成去重后的字符串数组。
+ */
+function normalizeTags(value: unknown): string[] {
+  const raw = Array.isArray(value) ?
+      value :
+      typeof value === 'string' ? value.split(/[,，、]/) : [];
+  const seen = new Set<string>();
+  for (const item of raw) {
+    const tag = String(item ?? '').trim();
+    if (tag) seen.add(tag);
+  }
+  return [...seen];
+}
+
+function normalizeCategories(value: unknown): string[] {
+  const raw = Array.isArray(value) ? value : typeof value === 'string' ? value.split(/[,，、]/) : [];
+  return [...new Set(raw.map((item) => String(item ?? '').trim()).filter(Boolean))];
+}
 
 export function getAllPosts(): Post[] {
   return fs.readdirSync(postsDirectory)
@@ -112,12 +131,13 @@ export function getAllPosts(): Post[] {
           title: String(data.title ?? slug),
           excerpt: String(data.description ?? ''),
           date: normalizeDate(data.date),
-          category: String(data.category ?? '未分类'),
+          categories: normalizeCategories(data.category ?? '未分类'),
+          tags: normalizeTags(data.tags),
           image: normalizeImagePath(data.cover),
           readTime: String(data.readTime ?? '阅读 5 分钟'),
         };
       })
-      .filter((post) => post.date && post.category)
+      .filter((post) => post.date && post.categories.length > 0)
       .sort((a, b) => dateTimestamp(b.date) - dateTimestamp(a.date));
 }
 
@@ -142,4 +162,80 @@ export function getPostHeadings(slug: string): Heading[] {
     const text = match[2].replace(/\s+#+\s*$/, '').trim();
     return [{depth, text, id: slugger.slug(text)}];
   });
+}
+
+function toTerm(segment: string, name: string, count: number): Term {
+  return {name, href: `/${segment}/${encodeURIComponent(name)}`, count};
+}
+
+/** 分类列表，按文章数倒序，文章数相同时按名称排序。 */
+export function getAllCategories(): Term[] {
+  const counts = new Map<string, number>();
+  for (const post of getAllPosts()) {
+    for (const category of post.categories) {
+      counts.set(category, (counts.get(category) ?? 0) + 1);
+    }
+  }
+  return [...counts.entries()]
+      .map(([name, count]) => toTerm('category', name, count))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh'));
+}
+
+/** 标签列表，按出现次数倒序，次数相同时按名称排序。 */
+export function getAllTags(): Term[] {
+  const counts = new Map<string, number>();
+  for (const post of getAllPosts()) {
+    for (const tag of post.tags) {
+      counts.set(tag, (counts.get(tag) ?? 0) + 1);
+    }
+  }
+  return [...counts.entries()]
+      .map(([name, count]) => toTerm('tag', name, count))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh'));
+}
+
+/** 按年月倒序分组的归档，组内文章同样按日期倒序。 */
+export function getArchive(): ArchiveGroup[] {
+  const groups = new Map<string, ArchiveGroup>();
+  for (const post of getAllPosts()) {
+    const key = post.date.slice(0, 7);
+    const [year, month] = key.split('-');
+    if (!year || !month) continue;
+    const group = groups.get(key) ?? {
+      id: key,
+      label: `${year} 年 ${Number(month)} 月`,
+      posts: [],
+    };
+    // getAllPosts 已经按时间倒序，push 进组的顺序自然保持倒序。
+    group.posts.push(post);
+    groups.set(key, group);
+  }
+  return [...groups.values()].sort((a, b) => b.id.localeCompare(a.id));
+}
+
+export function getPostsByCategory(category: string): Post[] {
+  return getAllPosts().filter((post) => post.categories.includes(decodeRouteParam(category)));
+}
+
+export function getPostsByTag(tag: string): Post[] {
+  return getAllPosts().filter((post) => post.tags.includes(decodeRouteParam(tag)));
+}
+
+function decodeRouteParam(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+export function searchPosts(query: string): Post[] {
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  if (!normalizedQuery) return [];
+  return getAllPosts().filter((post) =>
+    [post.title, post.excerpt, ...post.categories, ...post.tags]
+      .join(' ')
+      .toLocaleLowerCase()
+      .includes(normalizedQuery),
+  );
 }

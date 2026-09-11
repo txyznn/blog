@@ -48,7 +48,9 @@ export default async function PostPage({ params }: PageProps) {
           <div className="min-w-0 lg:col-start-1 lg:row-start-1">
         <header className="mx-auto max-w-3xl text-center">
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-            <Badge variant="secondary" className="gap-1.5"><Tag data-icon="inline-start" />{post.category}</Badge>
+            <div className="flex flex-wrap justify-center gap-2">
+              {post.categories.map((category) => <Badge key={category} variant="secondary" className="gap-1.5"><Tag data-icon="inline-start" />{category}</Badge>)}
+            </div>
             <span className="inline-flex items-center gap-1.5"><CalendarDays size={14} />{post.date}</span>
             <span className="inline-flex items-center gap-1.5"><Clock3 size={14} />{post.readTime}</span>
           </div>
