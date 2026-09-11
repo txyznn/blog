@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 export const navItems = [
   { label: '首页', href: '/' },
   { label: '文章', href: '/#content' },
+  { label: '专栏', href: '/series' },
   { label: '分类', href: '/#分类' },
   { label: '标签', href: '/#标签' },
   { label: '关于我', href: '/#关于我' },
@@ -20,7 +21,7 @@ export default function MainNavigation({ mobile = false, onNavigate }: { mobile?
       aria-label={mobile ? '移动导航' : '主导航'}
     >
       {navItems.map((item) => {
-        const isCurrent = item.href === '/archive' ? pathname === '/archive' : item.href === '/' && pathname === '/';
+        const isCurrent = item.href === '/' ? pathname === '/' : pathname === item.href || pathname.startsWith(`${item.href}/`);
         return (
           <Link
             key={item.label}

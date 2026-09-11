@@ -13,6 +13,14 @@ export default function SiteFooter() {
           <Image src={logoDark} alt="" width={105} height={23} aria-hidden="true" className="hidden h-auto w-[105px] dark:block" />
         </Link>
         <p className="mt-2">© 2026 Chaowen. Made with quiet care.</p>
+        <a
+          className="mt-1 inline-block transition-colors hover:text-primary"
+          href="https://beian.miit.gov.cn/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          粤ICP备2026134606号
+        </a>
       </div>
       <div className="flex gap-5">
         <Link href="/#关于我">关于</Link>

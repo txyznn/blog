@@ -132,6 +132,7 @@ export function getAllPosts(): Post[] {
           excerpt: String(data.description ?? ''),
           date: normalizeDate(data.date),
           categories: normalizeCategories(data.category ?? '未分类'),
+          series: typeof data.series === 'string' && data.series.trim() ? data.series.trim() : undefined,
           tags: normalizeTags(data.tags),
           image: normalizeImagePath(data.cover),
           readTime: String(data.readTime ?? '阅读 5 分钟'),
@@ -221,6 +222,21 @@ export function getPostsByTag(tag: string): Post[] {
   return getAllPosts().filter((post) => post.tags.includes(decodeRouteParam(tag)));
 }
 
+export function getAllSeries(): Term[] {
+  const counts = new Map<string, number>();
+  for (const post of getAllPosts()) {
+    if (post.series) counts.set(post.series, (counts.get(post.series) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+      .map(([name, count]) => toTerm('series', name, count))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh'));
+}
+
+export function getPostsBySeries(series: string): Post[] {
+  const normalizedSeries = decodeRouteParam(series);
+  return getAllPosts().filter((post) => post.series === normalizedSeries);
+}
+
 function decodeRouteParam(value: string): string {
   try {
     return decodeURIComponent(value);
@@ -233,7 +249,7 @@ export function searchPosts(query: string): Post[] {
   const normalizedQuery = query.trim().toLocaleLowerCase();
   if (!normalizedQuery) return [];
   return getAllPosts().filter((post) =>
-    [post.title, post.excerpt, ...post.categories, ...post.tags]
+    [post.title, post.excerpt, post.series ?? '', ...post.categories, ...post.tags]
       .join(' ')
       .toLocaleLowerCase()
       .includes(normalizedQuery),
