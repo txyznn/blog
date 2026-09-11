@@ -1,14 +1,120 @@
 ---
 title: 从零开始的ROS2指南（一）
 date: 2026-09-11
-description: 这是“从零开始的ROS2指南”专栏的第一篇文章。
+description: 这是关于ROS2的一个系列文章，介绍ros2怎么安装
 series: 从零开始的ROS2指南
 category: [技术教程, ROS2]
 tags: [ROS2, 机器人, 专栏]
-cover: /images/posts/hello-world/coffee-and-code.jpg
+cover: /images/posts/ros2-guide/ros2-picture.png
 readTime: 阅读 1 分钟
 ---
 
-# 这是一篇专栏
+# 从零开始的ROS2指南（一）：ROS2安装
 
-这是“从零开始的ROS2指南”专栏的第一篇文章，后续内容将在这里持续补充。
+我希望你看到这篇文章的时候，你已经具备了一些开发经验，例如C/C++、CMake、Python、Protobuf这类技术经验，不然这篇文章对你来说可能会带来痛苦
+
+## 前言
+
+在2026年初，我还任职在一家自动驾驶公司，担任仿真开发，我们需要针对另一家行业龙头公司的软件做仿真的适配工作，当时了解到他们使用的技术是ROS2，并且是arm加定制版本的ROS2，从这开始，我对于ROS2的理解就一直是一个消息中间件，包括现在也是，什么是消息中间件？对于相对有经验一些的研发来说其实很好理解，当你面对一个公司的系统架构时，各个模块之间通信大概率就会引入一个消息中间件，你只需要发布你的消息，然后订阅你想要的消息，这样就能完成跨模块的通信，甚至一些其他操作，业界管这类系统叫分布式系统。
+
+在AI的加持下，我花了一些时间了解了ROS2的一些开发技巧，当然这个过程仍然是痛苦的，因为国内的各种论坛或者博客上我还没找到相对像样、好理解一些的教程，我不断地翻阅着[官方的文档](https://docs.ros.org/)，你可能和我一样，并不会喜欢看它，可能最近ROS2的教程突然多了起来，在这里还有一些类似的概念或者说工具（foxglove、mcap），你后面也会接触它们的，希望我后续也会更新这类文章。当然，你可以提前看看[foxglove官方指南](https://docs.foxglove.dev/docs/getting-started/frameworks/ros2)。
+
+## 这个系列面向的对象
+
+我猜测应该大概率是刚接触机器人、自动驾驶行业的初学者，并且已经准备担任一些研发、写代码的工作了。
+
+## 什么是ROS2？
+
+ROS2，机器人操作系统，我猜测它的缩写大概是Robot Operation System，至少官方是这样定义它的，虽然在我看来它仅仅是一个消息中间件，详细的介绍在[百度百科ROS2](https://baike.baidu.com/item/ros2/67376143)也有相关介绍。
+
+## ROS2的版本
+
+在我使用ROS2的时候，有遇到过类似的问题，当时我的办公电脑是Ubuntu 24.04.4 LTS的操作系统，然而我想要验证的ROS2版本是Humble，所以我了解了相关的一些版本和操作系统的支持情况。
+
+- Jazzy Jalisco‌：Tier1支持Ubuntu 24.04（amd64/arm64）、Windows 10（VS2019 amd64），同时兼容macOS部分版本。
+- Humble Hawksbill‌：Tier1支持Ubuntu 22.04（amd64/arm64）、Windows 10，社区生态覆盖最广，第三方驱动和教程资源最丰富。
+- Kilted Kaiju‌：适配Ubuntu 24.04、Ubuntu 22.04、Windows 10，支持周期较短。
+- Rolling Ridley‌：持续跟进最新Ubuntu开发版，同步支持Windows和macOS，适合核心开发者尝鲜。
+- 全系列ROS2均支持嵌入式微控制器、实时操作系统（RTOS），相比ROS1大幅拓展了部署场景。
+
+下文就按照Ubuntu 24.04.4 LTS对应的Jazzy的版本来说明吧。
+
+## 安装ROS2
+
+### 1. 启用 universe 仓库
+
+```bash
+sudo apt update && sudo apt install -y software-properties-common
+sudo add-apt-repository universe
+```
+### 2. 设置 locale
+
+ROS2 工具要求系统使用 UTF-8 区域：
+
+```bash
+sudo apt update && sudo apt install -y locales
+sudo locale-gen en_US en_US.UTF-8
+sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+export LANG=en_US.UTF-8
+```
+
+### 3. 添加 ROS2 的 apt 源和密钥
+
+```bash
+sudo apt update && sudo apt install -y curl
+
+# 添加 GPG 密钥
+sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+  -o /usr/share/keyrings/ros-archive-keyring.gpg
+
+# 添加仓库（24.04 自动识别为 noble）
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
+http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | \
+sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+```
+
+### 4. 安装 ROS 2 Jazzy
+
+```bash
+sudo apt update
+sudo apt install -y ros-jazzy-desktop ros-dev-tools
+```
+
+- `ros-jazzy-desktop`：完整版，含 RViz2、demo、tutorials，学习首选（约 2GB+）
+- `ros-jazzy-ros-base`：精简版，无 GUI，适合开发板/服务器
+- `ros-jazzy-ros-core`：最小核心，只有通信栈
+
+### 5. 配置环境变量
+
+这一步比较核心，这会让你后续使用的时候不需要每次都source环境，每次打开新终端都需要 source，写入 ~/.bashrc 一劳永逸：
+
+```bash
+echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
+source ~/.bashrc
+```
+
+### 6. 验证安装
+
+你可以直接使用ros2命令来发布一个消息并订阅你发布的消息，来验证ros2是否已经安装好了。
+
+```bash
+# 默认以 1Hz 持续发布
+ros2 topic pub /chatter std_msgs/msg/String "{data: 'Hello from CLI'}"
+
+# 指定 5Hz 发布
+ros2 topic pub --rate 5 /chatter std_msgs/msg/String "{data: 'Fast hello'}"
+
+# 只发一条就退出（适合一次性指令）
+ros2 topic pub --once /chatter std_msgs/msg/String "{data: 'Single shot'}"
+
+# 发 3 条就退出
+ros2 topic pub --times 3 /chatter std_msgs/msg/String "{data: 'Three times'}"
+
+```
+
+## 常用的命令
+
+- `ros2 topic list` 查看topic列表
+- `ros2 topic info -v /topic` 查看topic信息，一般用来查看这个topic是哪个节点发送的，以及什么节点在消费它
+- `ros2 topic hz /topic` 查看当前消息的频率
+- `ros2 topic echo /topic` 打印topic，这个注意要适配一下protobuf协议，或者IDL协议，至于协议是啥，后面的文章我会说明
