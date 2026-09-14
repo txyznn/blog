@@ -3,8 +3,20 @@ import { Button } from '@/components/ui/button';
 
 export default function HeroSection() {
   return (
-    <section className="hero-bg min-h-[490px] px-7 py-20 md:min-h-[525px] md:px-16 md:py-28">
-      <div className="max-w-[510px]">
+    <section className="hero-bg relative isolate min-h-[490px] overflow-hidden px-7 py-20 md:min-h-[525px] md:px-16 md:py-28">
+      <video
+        className="hero-video"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        aria-hidden="true"
+      >
+        <source src="/vedioes/hero-sim-car.mp4" type="video/mp4" />
+      </video>
+      <div className="hero-video-overlay" aria-hidden="true" />
+      <div className="relative z-10 max-w-[510px]">
         <p className="mb-5 text-sm font-semibold text-primary">
           HELLO, I&apos;M CHAOWEN
         </p>

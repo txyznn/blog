@@ -157,6 +157,32 @@ input {
       center/cover;
 }
 
+.hero-video,
+.hero-video-overlay {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.hero-video {
+  z-index: -2;
+  object-fit: cover;
+  object-position: center top;
+  transform: scale(1.12);
+  transform-origin: center top;
+}
+
+.hero-video-overlay {
+  z-index: -1;
+  background: linear-gradient(
+    90deg,
+    var(--hero-overlay-start) 0%,
+    var(--hero-overlay-middle) 46%,
+    var(--hero-overlay-end) 76%
+  );
+}
+
 .article-body {
   color: var(--foreground);
   font-size: 1.0625rem;
@@ -258,5 +284,13 @@ input {
       ),
       url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=85')
         center/cover;
+  }
+
+  .hero-video-overlay {
+    background: linear-gradient(
+      180deg,
+      var(--hero-overlay-start),
+      var(--hero-overlay-middle)
+    );
   }
 }

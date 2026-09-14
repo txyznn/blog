@@ -3,7 +3,6 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 export const navItems = [
-  { label: '首页', href: '/' },
   { label: '文章', href: '/#content' },
   { label: '专栏', href: '/series' },
   { label: '分类', href: '/#分类' },
