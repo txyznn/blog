@@ -146,15 +146,7 @@ input {
 }
 
 .hero-bg {
-  background:
-    linear-gradient(
-      90deg,
-      var(--hero-overlay-start) 0%,
-      var(--hero-overlay-middle) 46%,
-      var(--hero-overlay-end) 76%
-    ),
-    url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1800&q=85')
-      center/cover;
+  background: var(--background);
 }
 
 .hero-video,
@@ -275,17 +267,6 @@ input {
 .article-body img { border-radius: 8px; }
 
 @media (max-width: 767px) {
-  .hero-bg {
-    background:
-      linear-gradient(
-        180deg,
-        var(--hero-overlay-start),
-        var(--hero-overlay-middle)
-      ),
-      url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=85')
-        center/cover;
-  }
-
   .hero-video-overlay {
     background: linear-gradient(
       180deg,
