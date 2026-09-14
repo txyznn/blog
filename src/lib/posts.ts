@@ -150,6 +150,13 @@ export function getPostBySlug(slug: string): Post|undefined {
   return getAllPosts().find((post) => post.slug === slug);
 }
 
+export function getAdjacentPosts(slug: string): {previous?: Post; next?: Post} {
+  const posts = getAllPosts();
+  const index = posts.findIndex((post) => post.slug === slug);
+  if (index < 0) return {};
+  return {previous: posts[index + 1], next: posts[index - 1]};
+}
+
 export function getPostHeadings(slug: string): Heading[] {
   const filePath = path.join(postsDirectory, `${slug}.mdx`);
   if (!fs.existsSync(filePath)) return [];

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, CalendarDays, Clock3, Tag } from 'lucide-react';
-import { getPostBySlug, getPostHeadings, getPostSlugs } from '../../../lib/posts';
+import { ArrowLeft, ArrowRight, CalendarDays, Clock3, Tag } from 'lucide-react';
+import { getAdjacentPosts, getPostBySlug, getPostHeadings, getPostSlugs } from '../../../lib/posts';
 import logoLight from '../../../asset/logo/logo-light.png';
 import logoDark from '../../../asset/logo/logo-dark.png';
 import TableOfContents from '../../../components/TableOfContents';
@@ -28,6 +28,7 @@ export default async function PostPage({ params }: PageProps) {
   const { slug } = await params;
   const post = getPostBySlug(slug);
   if (!post) notFound();
+  const { previous, next } = getAdjacentPosts(slug);
   const headings = getPostHeadings(slug);
   const Article = (await import(`../../../content/posts/${slug}.mdx`)).default;
   return (
@@ -68,9 +69,25 @@ export default async function PostPage({ params }: PageProps) {
           </div>
         </div>
 
-        <footer className="mx-auto mt-16 flex max-w-3xl items-center justify-between border-t border-border pt-6 text-sm text-muted-foreground">
-          <span>感谢阅读</span>
-          <Button asChild variant="link" className="h-auto p-0"><a href="/"><ArrowLeft data-icon="inline-start" />返回文章列表</a></Button>
+        <footer className="mx-auto mt-16 max-w-3xl border-t border-border pt-6">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {previous ? (
+              <a href={`/posts/${previous.slug}`} className="group rounded-md border border-border p-4 transition-colors hover:bg-blue-200">
+                <span className="flex items-center gap-1 text-xs text-muted-foreground"><ArrowLeft size={14} />上一篇</span>
+                <span className="mt-2 block font-medium text-foreground">{previous.title}</span>
+              </a>
+            ) : <span />}
+            {next ? (
+              <a href={`/posts/${next.slug}`} className="group rounded-md border border-border p-4 text-right transition-colors hover:bg-blue-200">
+                <span className="flex items-center justify-end gap-1 text-xs text-muted-foreground">下一篇<ArrowRight size={14} /></span>
+                <span className="mt-2 block font-medium text-foreground">{next.title}</span>
+              </a>
+            ) : null}
+          </div>
+          <div className="mt-6 flex items-center justify-between text-sm text-muted-foreground">
+            <span>感谢阅读</span>
+            <Button asChild variant="link" className="h-auto p-0"><a href="/"><ArrowLeft data-icon="inline-start" />返回文章列表</a></Button>
+          </div>
         </footer>
           </div>
         </div>
