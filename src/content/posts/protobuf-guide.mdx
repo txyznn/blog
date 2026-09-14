@@ -1,0 +1,148 @@
+---
+title: Protobuf 初印象：从零开始认识Protobuf协议
+date: 2026-09-13 15:45:13
+description: Protobuf（Protocol Buffers）是 Google 开发的一种语言无关、平台无关的结构化数据序列化机制，常被用于数据存储、通信协议等场景。下面我将以 C++17 标准，用一个简单的 IMU（惯性测量单元）传感器数据为例，演示 Protobuf 的完整使用流程。
+series: 仿真系统
+category: [技术教程, 自动驾驶]
+tags: [ROS2, 仿真, 自动驾驶]
+cover: /images/posts/protobuf-guide/protobuf-picture.png
+readTime: 阅读 6 分钟（不含视频）
+---
+
+# 从零开始认识 Protobuf 协议
+
+在很多高性能系统中，想要实现高效、快速、高一致性的通信，必须要用到的一种协议就是Protobuf，即使ROS2系统底层也会使用Protobuf，它和Json、Yaml等是同一类协议，都是用来序列化数据的，当然比起Json和Yaml，它的可读性就比较差了，它在系统内部通常都是以payload传输，也就是二进制序列，如果需要读取内容的话，就需要拿到对应的proto协议来反序列化，在很多应用层的协议中也能看到Protobuf的身影，例如HTTPS RPC等。
+
+下文以一个简单的demo来演示如何使用Protobuf。
+
+## 定义 .proto 文件
+
+首先创建一个 `imu.proto` 文件。在 proto3 语法中，所有字段默认都是可选的，并且不再需要 `optional` 关键字（除非你想显式区分“是否设置过”）。
+
+```protobuf
+syntax = "proto3";
+
+package sensor;
+
+message Vector3 {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
+message ImuData {
+  uint64 timestamp_ns = 1;
+  Vector3 angular_velocity = 2;
+  Vector3 linear_acceleration = 3;
+}
+```
+
+这里定义了两个消息：`Vector3` 表示三维向量，`ImuData` 包含时间戳、角速度和线加速度。每个字段后面的数字是字段编号，用于二进制编码时标识字段，一旦发布就不应更改。
+
+## 生成 C++ 代码
+
+使用 `protoc` 编译器生成 C++ 源文件：
+
+```bash
+protoc --cpp_out=. imu.proto
+```
+
+这会生成 `imu.pb.h` 和 `imu.pb.cc`。注意 `protoc` 的版本应与链接的 `libprotobuf` 运行时版本一致，否则可能因 ABI 不兼容导致崩溃。
+
+## C++ 示例代码
+
+下面是一段完整的 C++17 示例，演示序列化与反序列化：
+
+```cpp
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <google/protobuf/message.h>
+#include "imu.pb.h"
+
+int main() {
+  // 版本校验：确保头文件与链接库匹配
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  // 构造并填充 IMU 数据
+  sensor::ImuData imu;
+  imu.set_timestamp_ns(1234567890ULL);
+
+  auto* gyro = imu.mutable_angular_velocity();
+  gyro->set_x(0.01);
+  gyro->set_y(-0.02);
+  gyro->set_z(0.003);
+
+  auto* accel = imu.mutable_linear_acceleration();
+  accel->set_x(0.0);
+  accel->set_y(0.0);
+  accel->set_z(9.81);
+
+  // 序列化到字符串
+  std::string serialized_data;
+  if (!imu.SerializeToString(&serialized_data)) {
+    std::cerr << "序列化失败" << std::endl;
+    return 1;
+  }
+
+  std::cout << "序列化后字节数: " << serialized_data.size() << std::endl;
+
+  // 从字符串反序列化
+  sensor::ImuData parsed_imu;
+  if (!parsed_imu.ParseFromString(serialized_data)) {
+    std::cerr << "反序列化失败" << std::endl;
+    return 1;
+  }
+
+  // 访问字段验证数据
+  std::cout << "时间戳: " << parsed_imu.timestamp_ns() << " ns" << std::endl;
+  std::cout << "角速度: ("
+            << parsed_imu.angular_velocity().x() << ", "
+            << parsed_imu.angular_velocity().y() << ", "
+            << parsed_imu.angular_velocity().z() << ")" << std::endl;
+  std::cout << "线加速度: ("
+            << parsed_imu.linear_acceleration().x() << ", "
+            << parsed_imu.linear_acceleration().y() << ", "
+            << parsed_imu.linear_acceleration().z() << ")" << std::endl;
+
+  // 清理 Protobuf 全局状态
+  google::protobuf::ShutdownProtobufLibrary();
+  return 0;
+}
+```
+
+## 代码要点说明
+
+1. **版本校验**：`GOOGLE_PROTOBUF_VERIFY_VERSION` 宏应放在 `main` 函数开头，用于检测头文件与运行时库的版本不匹配问题。
+
+2. **可变访问器**：对于嵌套消息（如 `Vector3`），使用 `mutable_xxx()` 获取指针后再设置其字段；对于标量字段（如 `timestamp_ns`），直接使用 `set_xxx()`。
+
+3. **序列化与反序列化**：`SerializeToString()` 和 `ParseFromString()` 是常用的内存操作方式。实际项目中也可使用 `SerializeToOstream()` / `ParseFromIstream()` 直接操作文件流。务必检查返回值，解析失败时消息对象的状态不可靠。
+
+4. **编译链接**：使用 g++ 编译时需链接 `-lprotobuf`：
+
+```bash
+g++ -std=c++17 main.cpp imu.pb.cc -o imu_demo -lprotobuf
+```
+
+## 扩展：重复字段
+
+如果 IMU 需要支持多轴采样或历史数据，可以使用 `repeated` 字段。生成的 C++ 代码会提供 `add_xxx()` 追加元素、`xxx_size()` 获取数量、`xxx(index)` 按索引访问等 API。
+
+```protobuf
+message ImuSequence {
+  repeated ImuData samples = 1;
+}
+```
+
+```cpp
+sensor::ImuSequence seq;
+auto* sample = seq.add_samples();
+sample->set_timestamp_ns(1000);
+// ...
+std::cout << "样本数量: " << seq.samples_size() << std::endl;
+```
+
+## 总结
+
+Protobuf 在 C++ 中的使用流程清晰：定义 `.proto` 数据结构 → 用 `protoc` 生成代码 → 在 C++ 中通过生成的 setter/getter 操作消息 → 序列化/反序列化。对于传感器数据这类对体积和速度有要求的场景，Protobuf 的二进制编码比 JSON/XML 更紧凑高效。

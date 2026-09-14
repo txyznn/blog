@@ -32,8 +32,8 @@
   --hero-overlay-start: oklch(0.98 0.014 248 / 0.98);
   --hero-overlay-middle: oklch(0.97 0.018 248 / 0.84);
   --hero-overlay-end: oklch(0.97 0.018 248 / 0.1);
-  --code-background: oklch(0.22 0.025 255);
-  --code-foreground: oklch(0.94 0.008 255);
+  --code-background: var(--card);
+  --code-foreground: var(--foreground);
   --radius: 0.5rem;
 }
 
@@ -211,6 +211,38 @@ input {
   padding: 1.25rem 1.4rem;
   color: var(--code-foreground);
   line-height: 1.7;
+}
+.article-body .code-block {
+  margin: 2rem 0;
+}
+.article-body .code-block pre {
+  margin: 0;
+  border-radius: 0;
+  padding: 1rem 1.15rem 1.15rem;
+  background: var(--shiki-light-bg, var(--code-background));
+  color: var(--shiki-light, var(--code-foreground));
+  font-size: 0.875rem;
+  line-height: 1.65;
+  tab-size: 2;
+  white-space: pre;
+}
+.article-body .code-block pre:focus-visible {
+  outline-offset: -3px;
+}
+.article-body .code-block pre code {
+  display: block;
+  min-width: max-content;
+  font-size: inherit;
+}
+.article-body .code-block pre code span {
+  color: var(--shiki-light, inherit);
+}
+.dark .article-body .code-block pre {
+  background: var(--shiki-dark-bg, var(--code-background));
+  color: var(--shiki-dark, var(--code-foreground));
+}
+.dark .article-body .code-block pre code span {
+  color: var(--shiki-dark, inherit);
 }
 .article-body pre code { background: transparent; padding: 0; color: inherit; }
 .article-body hr { margin: 3rem 0; border: 0; border-top: 1px solid var(--border); }

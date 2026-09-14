@@ -17,6 +17,20 @@ export default createMDX({
   options: {
     // Use package names so Turbopack can serialize loader options.
     remarkPlugins: ['remark-frontmatter', 'remark-mdx-frontmatter'],
-    rehypePlugins: ['rehype-slug'],
+    rehypePlugins: [
+      'rehype-slug',
+      ['@shikijs/rehype', {
+        themes: {
+          light: 'github-light',
+          dark: 'github-dark',
+        },
+        addLanguageClass: true,
+        defaultColor: false,
+        stripEndNewline: false,
+        defaultLanguage: 'text',
+        fallbackLanguage: 'text',
+        langs: ['bash', 'c', 'cpp', 'javascript', 'json', 'markdown', 'text', 'typescript'],
+      }],
+    ],
   },
 })(nextConfig);
