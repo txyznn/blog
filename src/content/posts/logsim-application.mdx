@@ -1,0 +1,135 @@
+---
+title: logsim 应用：从日志回灌到目标级闭环
+date: 2026-09-14 11:42:47
+description: 用一段采集日志复现问题：看懂 simulator 与 sim_adapter 的分工，区分开环回灌、目标级闭环和 HIL 联调，并结合六段演示理解应用场景。
+series: 仿真系统
+category: [技术教程, 自动驾驶]
+tags: [logsim, 仿真, HIL, 日志回灌]
+cover: /images/posts/logsim-application/logsim-object-sim.png
+readTime: 阅读 6 分钟（不含视频）
+---
+
+实车上出现一次问题，往往很难让它原样再发生一次。logsim 的用途，就是把采集到的数据重新送给被测系统，让我们在台架或开发环境里反复分析同一段场景。
+
+本文结合 `simulator` 和 `sim_adapter` 的实现，先讲清数据怎么走，再看演示。整体架构可以配合[《分布式 HIL 仿真系统架构》](/posts/distributed-simulation-system)阅读。
+
+## 1. logsim 不是“播放行车视频”
+
+这里的 **log** 是采集数据，不只是程序打印的文本日志。项目中的 logsim 从 MCAP 数据目录读取消息，再按仿真时间推进回放。MCAP 可以理解为保存多路消息及其时间信息的容器。
+
+回放内容由配置决定，可以涉及定位、车辆状态、感知目标或图像等数据。**视频只是其中一种数据，回灌的关键是让被测系统收到接口正确、时间关系合理的输入。**
+
+先记住三个词：
+
+- **回灌**：把历史数据重新输入系统。
+- **Topic**：消息通道的名字，接收方通过订阅它获得数据。
+- **HIL**：硬件在环，也就是把真实计算硬件接进仿真链路。HIL 描述硬件是否参与，不等同于开环或闭环。
+
+## 2. 两个工程分别做什么？
+
+- **simulator：组织仿真运行。** `SimService` 提供运行入口，`Scheduler` 推进调度并路由消息；各节点通过 SDK 接入，执行 `Init / Step / Stop`，即初始化、逐步运行和结束清理。
+- **logsim：提供历史输入。** 它是 simulator 中的一个节点，由 `FillbackManager` 管理具体数据的回灌处理。
+- **sim_adapter：对接车端接口。** 它订阅仿真消息，按规则处理输入缓存、Topic 映射和协议转换，再通过 DDS 或 ROS2 发布给被测系统。当前工程分别构建对应后端的运行包。
+- **结果记录：留下复盘依据。** 适配器也支持按配置把车端 DDS/ROS2 消息回传给 simulator，再由记录节点保存。
+
+把中间的调度与消息路由简化后，开环数据链路可以这样看：
+
+```text
+采集日志（MCAP）
+    ↓
+logsim：按仿真时间取出数据
+    ↓
+simulator：调度与消息路由
+    ↓
+sim_adapter：映射 Topic、转换协议
+    ↓
+被测算法 / 车端硬件
+    ↓
+结果回传与记录
+```
+
+实际部署中，这些模块不必都在同一台机器上。接入新的设备时，先检查对应消息规则和发布后端，而不是把设备差异全部塞进日志播放器。
+
+## 3. 开环：相同输入，重新观察输出
+
+开环回灌沿用日志中的场景输入，**被测系统这次算出的结果，不会反过来改变后续回放场景**。结果仍然可以被记录；“有回传”不代表“有闭环”。
+
+例如，日志记录前方有车，被测算法本次给出减速结果，但后续仍按原日志推进。它适合复现问题、检查消息接入，也适合在固定输入下比较不同算法版本。
+
+新手建议先跑通开环：能收到数据、时间戳合理、输出有记录，再考虑闭环。
+
+### 演示：logsim 开环回灌
+
+<video controls playsInline preload="none" aria-label="logsim 开环回灌演示" className="w-full rounded-lg bg-muted">
+  <source src="/vedioes/posts/logsim-application/Y1M4%20logsim开环回灌.mp4" type="video/mp4" />
+  浏览器不支持视频播放，请使用下方链接。
+</video>
+
+[打开开环回灌视频](/vedioes/posts/logsim-application/Y1M4%20logsim开环回灌.mp4) · 约 41 秒
+
+## 4. 目标级闭环：让输出影响下一步输入
+
+闭环比开环多了一条反馈链：算法输出经过控制或车辆运动模型，更新仿真自车状态；下一步输入再根据这个状态调整。
+
+```text
+日志中的目标数据 → 按当前自车位姿修正 → 被测算法
+                          ↑                 ↓
+                    更新自车状态 ← 控制 / 车辆运动模型
+```
+
+为什么需要修正？假设日志里的车向前走了 10 米，而本次仿真只走了 8 米，此时前方目标相对自车的位置就不同了。继续原样发送日志中的相对坐标，会把两套自车状态混在一起。
+
+项目中的目标回灌实现会结合日志自车位姿与当前自车位姿，重建目标的位置、包围框等信息。这里的“位姿”，可以简单理解为车辆的位置和朝向。
+
+**目标级闭环不等于重新生成所有传感器画面。** 它主要在目标等结构化数据层面调整输入，不应据此认为摄像头图像、遮挡和所有交通参与者的行为都已经随仿真变化。验证范围要和实际接入的数据、模型保持一致。
+
+### 演示：logsim 目标级闭环
+
+<video controls playsInline preload="none" aria-label="logsim 目标级闭环演示" className="w-full rounded-lg bg-muted">
+  <source src="/vedioes/posts/logsim-application/Y1M4%20logsim目标级闭环.mp4" type="video/mp4" />
+  浏览器不支持视频播放，请使用下方链接。
+</video>
+
+[打开目标级闭环视频](/vedioes/posts/logsim-application/Y1M4%20logsim目标级闭环.mp4) · 约 42 秒
+
+## 5. 从回灌走向 HIL 与业务联调
+
+当仿真数据能够通过适配层送到真实设备，就可以进一步联调硬件和业务接口。下面按演示主题整理 HIL、远遥和 APP 派送视频。
+
+需要区分：**这些是相关应用演示，不代表每个场景都由 logsim 驱动。** HIL 也可以使用实时场景与传感器仿真；远遥、派送还涉及各自的控制入口和业务链路，不能仅凭演示名称判断其内部回灌方式。
+
+### HIL 演示
+
+<video controls playsInline preload="none" aria-label="HIL 演示" className="w-full rounded-lg bg-muted">
+  <source src="/vedioes/posts/logsim-application/D4M6%20HIL演示视频.mp4" type="video/mp4" />
+  浏览器不支持视频播放，请使用下方链接。
+</video>
+
+[打开 HIL 演示视频](/vedioes/posts/logsim-application/D4M6%20HIL演示视频.mp4) · 约 3 分 39 秒，文件较大，建议使用 Wi-Fi
+
+### 无人驾驶远遥演示（远程遥控）
+
+<video controls playsInline preload="none" aria-label="远遥演示" className="w-full rounded-lg bg-muted">
+  <source src="/vedioes/posts/logsim-application/D4M6远遥视频.mp4" type="video/mp4" />
+  浏览器不支持视频播放，请使用下方链接。
+</video>
+
+[打开 D4M6 远遥视频](/vedioes/posts/logsim-application/D4M6远遥视频.mp4) · 约 20 秒
+
+### 目标级远遥演示
+
+<video controls playsInline preload="none" aria-label="远遥演示" className="w-full rounded-lg bg-muted">
+  <source src="/vedioes/posts/logsim-application/Y1M4%20远遥.mp4" type="video/mp4" />
+  浏览器不支持视频播放，请使用下方链接。
+</video>
+
+[打开 Y1M4 远遥视频](/vedioes/posts/logsim-application/Y1M4%20远遥.mp4) · 约 58 秒
+
+### 无人驾驶 APP 导航派送演示
+
+<video controls playsInline preload="none" aria-label="APP 派送演示" className="w-full rounded-lg bg-muted">
+  <source src="/vedioes/posts/logsim-application/Y1M4%20APP派送.mp4" type="video/mp4" />
+  浏览器不支持视频播放，请使用下方链接。
+</video>
+
+[打开 APP 派送视频](/vedioes/posts/logsim-application/Y1M4%20APP派送.mp4) · 约 4 分 18 秒，文件较大，建议使用 Wi-Fi
