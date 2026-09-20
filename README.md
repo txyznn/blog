@@ -9,4 +9,4 @@ npm install
 npm run dev
 ```
 
-文章放在 `src/content/posts` 下，以 `.mdx` 文件维护。生产环境计划部署到自有服务器，相关记录见 `docs/05-deployment/自有服务器部署.md`。
+文章放在 `src/content/posts` 下维护，当前主要使用 `.mdx`，后续将支持普通 `.md` 文章。生产环境已部署到自有服务器，相关记录见 `docs/05-deployment/自有服务器部署.md`。
