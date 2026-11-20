@@ -4,6 +4,7 @@ node_modules/
 # Next.js build output and cache
 .next/
 out/
+next-env.d.ts
 
 # TypeScript incremental build cache
 *.tsbuildinfo
