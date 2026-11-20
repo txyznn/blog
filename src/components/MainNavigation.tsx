@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 export const navItems = [
   { label: '文章', href: '/#content' },
   { label: '专栏', href: '/series' },
+  { label: '利润计算', href: '/tools/amazon-profit' },
   { label: '分类', href: '/#分类' },
   { label: '标签', href: '/#标签' },
   { label: '关于我', href: '/#关于我' },

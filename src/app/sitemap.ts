@@ -3,7 +3,7 @@ import { getAllPosts, getAllCategories, getAllTags, getAllSeries } from '@/lib/p
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://txyznn.xyz';
-  const routes = ['/', '/archive', '/search', '/series'];
+  const routes = ['/', '/archive', '/search', '/series', '/tools/amazon-profit'];
   return [
     ...routes.map((route) => ({ url: `${baseUrl}${route}` })),
     ...getAllPosts().map((post) => ({ url: `${baseUrl}/posts/${post.slug}`, lastModified: new Date(post.date.replace(' ', 'T') + '+08:00') })),
