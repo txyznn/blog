@@ -1,0 +1,103 @@
+---
+title: 面向Python程序员的Protobuf基础使用入门
+date: 2026-11-24 09:43:13
+description: 本教程为 Python 基础程序员提供了使用 Protobuf 的入门介绍
+series: 仿真系统
+category: [技术教程, 自动驾驶]
+tags: [ROS2, 仿真, 自动驾驶]
+cover: /images/posts/protobuf-guide/protobuf-picture.png
+readTime: 阅读 5 分钟
+---
+
+# 面向Python程序员的Protobuf基础使用入门
+
+在当今AI时代，Python越来越成为程序员入门编程的主流语言，AI+Python的生态日渐完善，后者程序员开发的工作也会越来越少，本文介绍一下Python的Protobuf案例，旨在让初学者理解Protobuf的概念，在AI的加持下能更好地设计并开发出高性能系统。
+
+## 案例介绍
+
+这是一个取自[Protobuf官网](https://protobuf.dev/)的通讯录案例
+
+## 定义proto文件
+
+定义一个名为addressbook.proto的proto文件，它的语法和C、Java等语言定义proto内容是一致的，期中`edition = "2023"`是新版protobuf的语法声明，2023是第一个正式edition版本。
+
+```protobuf
+edition = "2023";
+
+package tutorial;
+
+message Person {
+  string name = 1;
+  int32 id = 2;
+  string email = 3;
+
+  enum PhoneType {
+    PHONE_TYPE_UNSPECIFIED = 0;
+    PHONE_TYPE_MOBILE = 1;
+    PHONE_TYPE_HOME = 2;
+    PHONE_TYPE_WORK = 3;
+  }
+
+  message PhoneNumber {
+    string number = 1;
+    PhoneType type = 2 [default = PHONE_TYPE_HOME];
+  }
+
+  repeated PhoneNumber phones = 4;
+}
+
+message AddressBook {
+  repeated Person people = 1;
+}
+```
+
+.proto文件以package语句开头，这有助于防止不同项目之间出现命名冲突，在Python语言中，包通常是由目录结构来决定，它会单独生成一个命名空间来包裹住定义的消息内容，反序列化后按照类的方式读取成员变量即可访问到目标消息
+
+## 编译Protobuf Schema
+
+```bash
+protoc --proto_path=./ --python_out=. addressbook.proto
+```
+
+这会生成一个`addressbook_pb2.py`的文件，其中`pb2`并不是proto2版本的意思，它的历史背景来自于Google内部的proto python v1，后面废弃了，现在统一这套Python生成代码就叫pb2版本
+
+理解这类编译，其实它就像是手写的类函数一样，只不过用了一个编译器，将结构化的proto文件翻译成了对应的代码，是面向对象编程的延伸产物，它的优势就是将某些结构化的东西固定了，看一个结构化文件要比看一整串数据类代码要轻松的多，然后新增了编码和解码逻辑，将数据压缩，提升了效率。
+
+## 示例
+
+下面是一段完整的 Python 示例，演示序列化与反序列化：
+
+Python使用起来会相当简洁，就像是平常使用类一样
+
+```python
+import addressbook_pb2
+
+person = addressbook_pb2.Person()
+person.id = 1234
+person.name = "John Doe"
+person.email = "jdoe@example.com"
+phone = person.phones.add()
+phone.number = "555-4321"
+phone.type = addressbook_pb2.Person.PHONE_TYPE_HOME
+
+# person.no_such_field = 1  # raises AttributeError
+# person.id = "1234"        # raises TypeError
+
+address_book = addressbook_pb2.AddressBook()
+
+address_book.people.append(person)
+
+# Serialize
+data = address_book.SerializeToString()
+
+print("data: ", data)
+
+decoded = addressbook_pb2.AddressBook()
+
+parse_data = decoded.ParseFromString(data)
+
+print("len(data): ", len(data))
+print("parse_data: ", parse_data) # 打印函数ParseFromString的返回，默认返回len(data)
+print("decoded: ", decoded) # 打印整个类
+print("name: ", decoded.people[0].name) # 打印成员变量
+```
